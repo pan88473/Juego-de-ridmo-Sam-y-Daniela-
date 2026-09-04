@@ -40,7 +40,7 @@
             box-shadow: 0 0 50px rgba(255, 65, 108, 0.3);
         }
 
-        /* --- ZONA RIVAL (SUPERIOR: 38%) --- */
+        /* --- ZONA RIVAL (38%) --- */
         #rival-section {
             position: relative;
             width: 100%;
@@ -74,24 +74,31 @@
             color: #ff416c;
         }
 
-        /* --- BARRA CENTRAL: SUBTÍTULOS Y VS (14%) --- */
+        /* --- BARRA CENTRAL: SUBTÍTULOS & BOTÓN DE CHAT (14%) --- */
         #mid-bar {
             position: relative;
             width: 100%;
             height: 14%;
             background: linear-gradient(180deg, #130924 0%, #0c0417 100%);
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            padding: 4px 12px;
+            padding: 0 12px;
             border-bottom: 2px solid #00f0ff;
-            z-index: 15;
+            z-index: 20;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
         }
 
+        #lyrics-container {
+            flex: 1;
+            padding-right: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         #lyrics-content {
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             font-weight: 900;
             text-align: center;
             text-transform: uppercase;
@@ -108,15 +115,30 @@
             transform: scale(1.05);
         }
 
-        #vs-status {
-            font-size: 0.65rem;
-            font-weight: 800;
-            color: #8fa0c2;
-            margin-top: 3px;
-            letter-spacing: 1px;
+        /* Botón de Chat en la barra media */
+        #chat-toggle-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff416c, #7928ca);
+            border: 1.5px solid rgba(255, 255, 255, 0.5);
+            color: #fff;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(255, 65, 108, 0.6);
+            cursor: pointer;
+            flex-shrink: 0;
+            pointer-events: auto;
+            touch-action: auto;
         }
 
-        /* --- ZONA JUGADOR LOCAL (INFERIOR: 48%) --- */
+        #chat-toggle-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* --- ZONA JUGADOR LOCAL (48%) --- */
         #player-section {
             position: relative;
             width: 100%;
@@ -165,6 +187,113 @@
             transition: opacity 0.1s ease-out;
         }
 
+        /* --- BURBUJAS FLOTANTES DE CHAT (Bajo la barra media) --- */
+        #chat-bubble-container {
+            position: absolute;
+            top: 54%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+            z-index: 25;
+            gap: 4px;
+        }
+
+        .chat-bubble {
+            background: rgba(18, 9, 32, 0.94);
+            border-radius: 18px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+            border: 1px solid;
+            animation: popIn 0.25s ease-out forwards;
+        }
+
+        .bubble-daniela { border-color: #ff416c; color: #ff99b3; }
+        .bubble-sam { border-color: #00f0ff; color: #99f3ff; }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* --- VENTANAS DE CHAT EN 2 FASES --- */
+        /* Fase 1: Respuestas Rápidas */
+        #chat-phase1 {
+            position: absolute;
+            right: 12px;
+            top: 52%;
+            background: rgba(22, 11, 38, 0.95);
+            border: 1px solid #00f0ff;
+            border-radius: 14px;
+            padding: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            z-index: 35;
+            display: flex;
+            gap: 6px;
+            pointer-events: auto;
+            touch-action: auto;
+        }
+
+        .quick-btn {
+            background: #2c1547;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 1rem;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .quick-btn:active { transform: scale(0.92); }
+
+        /* Fase 2: Input de Texto Completo */
+        #chat-phase2 {
+            position: absolute;
+            left: 50%;
+            top: 52%;
+            transform: translateX(-50%);
+            width: 90%;
+            background: rgba(22, 11, 38, 0.98);
+            border: 1.5px solid #ff416c;
+            border-radius: 16px;
+            padding: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            z-index: 36;
+            display: flex;
+            gap: 8px;
+            pointer-events: auto;
+            touch-action: auto;
+        }
+
+        #chat-input-field {
+            flex: 1;
+            background: #0f071d;
+            border: 1px solid #4a1d72;
+            border-radius: 10px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+            user-select: auto;
+            -webkit-user-select: auto;
+            touch-action: auto;
+        }
+
+        #chat-send-btn {
+            background: linear-gradient(90deg, #ff416c, #f9d423);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            padding: 0 16px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
         /* --- EFECTO CORAZÓN POR COMBO 15 --- */
         #heart-attack-overlay {
             position: absolute;
@@ -193,205 +322,27 @@
             100% { transform: translateY(-160px) scale(1.4) rotate(25deg); opacity: 0; }
         }
 
-        /* --- SISTEMA DE BURBUJAS FLOTANTES DE CHAT --- */
-        #chat-bubble-container {
-            position: absolute;
-            top: 24%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            pointer-events: none;
-            z-index: 22;
-            gap: 6px;
-        }
-
-        .chat-bubble {
-            background: rgba(18, 9, 32, 0.92);
-            border-radius: 18px;
-            padding: 6px 14px;
-            font-size: 0.85rem;
-            font-weight: 800;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
-            border: 1px solid;
-            animation: popIn 0.25s ease-out forwards;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .bubble-daniela {
-            border-color: #ff416c;
-            color: #ff99b3;
-        }
-
-        .bubble-sam {
-            border-color: #00f0ff;
-            color: #99f3ff;
-        }
-
-        @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.8) translateY(10px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        /* --- BOTÓN FLOTANTE & VENTANA DE CHAT --- */
-        #chat-toggle-btn {
-            position: absolute;
-            right: 14px;
-            bottom: 14px;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ff416c, #7928ca);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            color: #fff;
-            font-size: 1.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.6);
-            z-index: 28;
-            cursor: pointer;
-            pointer-events: auto;
-            touch-action: auto;
-        }
-
-        #chat-drawer {
-            position: absolute;
-            bottom: 66px;
-            right: 12px;
-            width: 290px;
-            background: rgba(22, 11, 38, 0.96);
-            border: 1px solid #00f0ff;
-            border-radius: 18px;
-            padding: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
-            z-index: 30;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: auto;
-            touch-action: auto;
-        }
-
-        .chat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.8rem;
-            font-weight: 800;
-            color: #f9d423;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 4px;
-        }
-
-        #chat-close-btn {
-            background: transparent;
-            border: none;
-            color: #b09dc8;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            padding: 0 4px;
-        }
-
-        #chat-history {
-            height: 90px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            font-size: 0.75rem;
-            padding-right: 4px;
-        }
-
-        .history-msg {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 3px 8px;
-            border-radius: 8px;
-            word-break: break-word;
-        }
-
-        .history-daniela { color: #ff99b3; }
-        .history-sam { color: #99f3ff; }
-
-        .quick-reactions {
-            display: flex;
-            gap: 4px;
-            overflow-x: auto;
-            padding-bottom: 2px;
-        }
-
-        .reaction-btn {
-            flex: 1;
-            background: #2b1747;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            padding: 5px 0;
-            font-size: 0.95rem;
-            color: #fff;
-            cursor: pointer;
-        }
-
-        .reaction-btn:active {
-            transform: scale(0.92);
-        }
-
-        #chat-form {
-            display: flex;
-            gap: 6px;
-        }
-
-        #chat-input {
-            flex: 1;
-            background: #0f071d;
-            border: 1px solid #4a1d72;
-            border-radius: 12px;
-            padding: 8px 10px;
-            color: #fff;
-            font-size: 0.82rem;
-            outline: none;
-            user-select: auto;
-            -webkit-user-select: auto;
-            touch-action: auto;
-        }
-
-        #chat-send-btn {
-            background: linear-gradient(90deg, #ff416c, #f9d423);
-            border: none;
-            border-radius: 12px;
-            color: #fff;
-            padding: 0 14px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        /* --- PANTALLAS DE MENÚ Y SALA --- */
+        /* --- PANTALLAS DE SALA Y CONFIGURACIÓN --- */
         .overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(6, 3, 14, 0.95);
+            background: rgba(6, 3, 14, 0.96);
             backdrop-filter: blur(14px);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 24px;
-            z-index: 40;
+            z-index: 50;
         }
 
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
 
         h1 {
-            font-size: 2.1rem;
+            font-size: 2rem;
             margin-bottom: 6px;
             text-align: center;
             background: linear-gradient(135deg, #ff416c, #f9d423);
@@ -403,24 +354,52 @@
         .card {
             width: 100%;
             max-width: 320px;
-            background: rgba(28, 16, 48, 0.9);
+            background: rgba(28, 16, 48, 0.92);
             border-radius: 20px;
             padding: 22px 20px;
             border: 1px solid rgba(255, 65, 108, 0.35);
             text-align: center;
         }
 
+        .form-group {
+            text-align: left;
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.72rem;
+            color: #ff416c;
+            margin-bottom: 4px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            background: #0f071d;
+            border: 1px solid #4a1d72;
+            border-radius: 12px;
+            color: #00f0ff;
+            font-size: 0.95rem;
+            font-weight: 700;
+            outline: none;
+            user-select: auto;
+            -webkit-user-select: auto;
+            touch-action: auto;
+        }
+
         .player-btn {
             width: 100%;
-            padding: 15px;
-            margin: 8px 0;
+            padding: 14px;
+            margin: 6px 0;
             border: none;
             border-radius: 30px;
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: 900;
             text-transform: uppercase;
             cursor: pointer;
-            transition: transform 0.1s;
         }
 
         .btn-daniela {
@@ -435,15 +414,23 @@
             box-shadow: 0 4px 18px rgba(0, 210, 255, 0.4);
         }
 
-        .player-btn:active {
-            transform: scale(0.96);
+        .btn-ready {
+            background: linear-gradient(90deg, #00f5d4, #00bbf9);
+            color: #000;
+            box-shadow: 0 4px 18px rgba(0, 245, 212, 0.4);
         }
 
-        #wait-status {
-            font-size: 0.88rem;
-            color: #f9d423;
+        .player-btn:active { transform: scale(0.96); }
+
+        #room-status-box {
             margin-top: 14px;
-            font-weight: 700;
+            background: rgba(12, 6, 22, 0.8);
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px dashed #7928ca;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: #b09dc8;
         }
     </style>
 </head>
@@ -452,27 +439,6 @@
 <div id="game-container">
     <div id="heart-attack-overlay"></div>
     <div id="chat-bubble-container"></div>
-
-    <button id="chat-toggle-btn">💬</button>
-
-    <div id="chat-drawer" class="hidden">
-        <div class="chat-header">
-            <span>Chat con tu rival</span>
-            <button id="chat-close-btn">✕</button>
-        </div>
-        <div id="chat-history"></div>
-        <div class="quick-reactions">
-            <button class="reaction-btn" data-msg="🔥 ¡Con todo!">🔥</button>
-            <button class="reaction-btn" data-msg="❤️ ¡Vamos!">❤️</button>
-            <button class="reaction-btn" data-msg="😂 Jajaja">😂</button>
-            <button class="reaction-btn" data-msg="⚡ ¡Qué reflejos!">⚡</button>
-            <button class="reaction-btn" data-msg="👑 Te gané">👑</button>
-        </div>
-        <form id="chat-form">
-            <input type="text" id="chat-input" placeholder="Escribe algo..." maxlength="50" autocomplete="off">
-            <button type="submit" id="chat-send-btn">➤</button>
-        </form>
-    </div>
 
     <div id="rival-section">
         <div id="rival-hud">
@@ -484,8 +450,23 @@
     </div>
 
     <div id="mid-bar">
-        <div id="lyrics-content">♪ Dusk Till Dawn (Multiplayer) ♪</div>
-        <div id="vs-status">SINCRONIZADO POR FIREBASE</div>
+        <div id="lyrics-container">
+            <div id="lyrics-content">♪ Dusk Till Dawn (Multiplayer) ♪</div>
+        </div>
+        <button id="chat-toggle-btn">💬</button>
+    </div>
+
+    <div id="chat-phase1" class="hidden">
+        <button class="quick-btn" data-msg="🔥 ¡Con todo!">🔥</button>
+        <button class="quick-btn" data-msg="❤️ ¡Vamos!">❤️</button>
+        <button class="quick-btn" data-msg="😂 Jajaja">😂</button>
+        <button class="quick-btn" data-msg="👑 Te gané">👑</button>
+        <button class="quick-btn" id="btn-open-keyboard" style="background:#ff416c;">⌨️</button>
+    </div>
+
+    <div id="chat-phase2" class="hidden">
+        <input type="text" id="chat-input-field" placeholder="Escribe tu mensaje..." maxlength="45" autocomplete="off">
+        <button id="chat-send-btn">➤</button>
     </div>
 
     <div id="player-section">
@@ -500,15 +481,38 @@
         <canvas id="player-canvas"></canvas>
     </div>
 
-    <div id="lobby-screen" class="overlay">
+    <div id="screen-character" class="overlay">
         <h1>Dusk Till Dawn</h1>
-        <p style="color: #b09dc8; font-size: 0.8rem; margin-bottom: 20px;">Duelo 1 vs 1 en Tiempo Real</p>
-        
+        <p style="color: #b09dc8; font-size: 0.8rem; margin-bottom: 20px;">Duelo VS en Tiempo Real</p>
         <div class="card">
-            <p style="font-size: 0.78rem; color: #8fa0c2; margin-bottom: 12px; font-weight: 700;">ELIGE TU JUGADOR:</p>
-            <button class="player-btn btn-daniela" id="btn-choose-daniela">Soy Daniela</button>
-            <button class="player-btn btn-sam" id="btn-choose-sam">Soy Sam</button>
-            <div id="wait-status">Selecciona un perfil para conectar</div>
+            <p style="font-size: 0.78rem; color: #8fa0c2; margin-bottom: 12px; font-weight: 700;">PASO 1: ¿QUIÉN ERES?</p>
+            <button class="player-btn btn-daniela" id="btn-select-daniela">Soy Daniela</button>
+            <button class="player-btn btn-sam" id="btn-select-sam">Soy Sam</button>
+        </div>
+    </div>
+
+    <div id="screen-room" class="overlay hidden">
+        <h1>Sala de Duelo</h1>
+        <div class="card">
+            <div class="form-group">
+                <label for="room-pass">Contraseña de Partida:</label>
+                <input type="text" id="room-pass" placeholder="Ej: 1234" value="1234">
+            </div>
+
+            <div class="form-group">
+                <label for="song-select">Canción:</label>
+                <select id="song-select">
+                    <option value="dusk" selected>Dusk Till Dawn (Radio Edit)</option>
+                </select>
+            </div>
+
+            <button class="player-btn btn-ready" id="btn-join-room">Conectar a la Sala</button>
+
+            <div id="room-status-box" class="hidden">
+                <div id="status-daniela">Daniela: Esperando...</div>
+                <div id="status-sam">Sam: Esperando...</div>
+                <div id="countdown-text" style="color:#f9d423; font-weight:900; margin-top:8px;"></div>
+            </div>
         </div>
     </div>
 
@@ -517,7 +521,7 @@
         <div class="card">
             <h2 id="winner-announcement" style="color: #f9d423; margin-bottom: 14px; font-size: 1.4rem;"></h2>
             <p id="final-stats" style="color: #b09dc8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px;"></p>
-            <button class="player-btn btn-daniela" id="rematch-btn">Volver al Menú</button>
+            <button class="player-btn btn-daniela" id="rematch-btn">Volver a Jugar</button>
         </div>
     </div>
 
@@ -540,11 +544,12 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const roomRef = db.ref("rooms/match_daniela_sam");
-const chatRef = roomRef.child("chat");
 
 let localPlayer = "";
 let rivalPlayer = "";
+let roomCode = "";
+let currentRoomRef = null;
+let chatRef = null;
 
 /* =================================================================
    2. RETROALIMENTACIÓN DE AUDIO (SFX)
@@ -587,7 +592,7 @@ const SFX = {
 };
 
 /* =================================================================
-   3. SUBTÍTULOS TRADUCIDOS AL ESPAÑOL
+   3. SUBTÍTULOS SINCRONIZADOS AL ESPAÑOL
    ================================================================= */
 const LYRICS = [
     { start: 0.0, end: 11.5, text: "♪ (Intro - Piano) ♪", isChorus: false },
@@ -772,80 +777,95 @@ let rivalSpeed = 380;
 let gameStartTimestamp = 0;
 
 /* =================================================================
-   6. SISTEMA DE CHAT & REACCIONES FIREBASE
+   6. GESTIÓN DEL CHAT EN 2 FASES (1 Toque: Rápido / 2 Toques: Texto)
    ================================================================= */
-const chatDrawer = document.getElementById('chat-drawer');
 const chatToggleBtn = document.getElementById('chat-toggle-btn');
-const chatCloseBtn = document.getElementById('chat-close-btn');
-const chatForm = document.getElementById('chat-form');
-const chatInput = document.getElementById('chat-input');
-const chatHistory = document.getElementById('chat-history');
+const chatPhase1 = document.getElementById('chat-phase1');
+const chatPhase2 = document.getElementById('chat-phase2');
+const chatInputField = document.getElementById('chat-input-field');
+const chatSendBtn = document.getElementById('chat-send-btn');
+const btnOpenKeyboard = document.getElementById('btn-open-keyboard');
 const chatBubbleContainer = document.getElementById('chat-bubble-container');
 
+let lastChatTap = 0;
+
+function closeAllChatDrawers() {
+    chatPhase1.classList.add('hidden');
+    chatPhase2.classList.add('hidden');
+}
+
+// Detección de 1 toque vs 2 toques sobre el botón de chat
 chatToggleBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    chatDrawer.classList.toggle('hidden');
-    if (!chatDrawer.classList.contains('hidden')) {
-        chatInput.focus();
+    const now = Date.now();
+    const delta = now - lastChatTap;
+    lastChatTap = now;
+
+    if (delta < 300) {
+        // Doble toque -> Fase 2 (Teclado)
+        chatPhase1.classList.add('hidden');
+        chatPhase2.classList.toggle('hidden');
+        if (!chatPhase2.classList.contains('hidden')) {
+            chatInputField.focus();
+        }
+    } else {
+        // Toque simple -> Fase 1 (Respuestas rápidas)
+        chatPhase2.classList.add('hidden');
+        chatPhase1.classList.toggle('hidden');
     }
 });
 
-chatCloseBtn.addEventListener('click', (e) => {
+btnOpenKeyboard.addEventListener('click', (e) => {
     e.stopPropagation();
-    chatDrawer.classList.add('hidden');
+    chatPhase1.classList.add('hidden');
+    chatPhase2.classList.remove('hidden');
+    chatInputField.focus();
 });
 
-// Evitar que toques dentro del chat activen notas
-chatDrawer.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
-chatToggleBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
-
-function sendChatMessage(text) {
-    if (!localPlayer || !text || !text.trim()) return;
+// Enviar mensaje
+function sendChat(text) {
+    if (!chatRef || !text || !text.trim()) return;
     chatRef.push({
         sender: localPlayer,
         text: text.trim(),
         timestamp: firebase.database.ServerValue.TIMESTAMP
     });
+    closeAllChatDrawers();
 }
 
-chatForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const val = chatInput.value;
-    if (val) {
-        sendChatMessage(val);
-        chatInput.value = '';
-        chatDrawer.classList.add('hidden');
-    }
-});
-
-document.querySelectorAll('.reaction-btn').forEach(btn => {
+document.querySelectorAll('.quick-btn[data-msg]').forEach(btn => {
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const msg = btn.getAttribute('data-msg');
-        sendChatMessage(msg);
-        chatDrawer.classList.add('hidden');
+        sendChat(btn.getAttribute('data-msg'));
     });
 });
 
-chatRef.limitToLast(15).on('child_added', (snapshot) => {
-    const msg = snapshot.val();
-    if (!msg) return;
-
-    // 1. Agregar a historial
-    const historyItem = document.createElement('div');
-    historyItem.className = `history-msg ${msg.sender === 'Daniela' ? 'history-daniela' : 'history-sam'}`;
-    historyItem.innerText = `${msg.sender}: ${msg.text}`;
-    chatHistory.appendChild(historyItem);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-
-    // 2. Mostrar burbuja flotante en pantalla
-    displayFloatingBubble(msg.sender, msg.text);
+chatSendBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (chatInputField.value) {
+        sendChat(chatInputField.value);
+        chatInputField.value = '';
+    }
 });
 
-function displayFloatingBubble(sender, text) {
+chatInputField.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        chatSendBtn.click();
+    }
+});
+
+// Cerrar chat al tocar la pantalla fuera
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('#chat-phase1') && !e.target.closest('#chat-phase2') && !e.target.closest('#chat-toggle-btn')) {
+        closeAllChatDrawers();
+    }
+});
+
+function displayBubble(sender, text) {
     const bubble = document.createElement('div');
     bubble.className = `chat-bubble ${sender === 'Daniela' ? 'bubble-daniela' : 'bubble-sam'}`;
-    bubble.innerHTML = `<span style="font-size: 0.75rem; opacity: 0.8;">[${sender}]</span> <span>${text}</span>`;
+    bubble.innerHTML = `<span style="font-size:0.75rem; opacity:0.8;">[${sender}]</span> <span>${text}</span>`;
     chatBubbleContainer.appendChild(bubble);
 
     setTimeout(() => {
@@ -853,43 +873,74 @@ function displayFloatingBubble(sender, text) {
         bubble.style.opacity = '0';
         bubble.style.transform = 'translateY(-10px)';
         setTimeout(() => bubble.remove(), 300);
-    }, 3200);
+    }, 2800);
 }
 
 /* =================================================================
-   7. LÓGICA DE SALA & SINCRONIZACIÓN FIREBASE
+   7. LOBBY ROBUSTO CON CONTRASEÑA Y SINCRONIZACIÓN DE 2 JUGADORES
    ================================================================= */
-document.getElementById('btn-choose-daniela').addEventListener('click', () => joinRoom('Daniela'));
-document.getElementById('btn-choose-sam').addEventListener('click', () => joinRoom('Sam'));
+document.getElementById('btn-select-daniela').addEventListener('click', () => pickPlayer('Daniela'));
+document.getElementById('btn-select-sam').addEventListener('click', () => pickPlayer('Sam'));
 
-function joinRoom(name) {
+function pickPlayer(name) {
     SFX.init();
     localPlayer = name;
     rivalPlayer = (name === 'Daniela') ? 'Sam' : 'Daniela';
 
+    document.getElementById('screen-character').classList.add('hidden');
+    document.getElementById('screen-room').classList.remove('hidden');
     document.getElementById('player-name-badge').innerText = `TÚ (${localPlayer.toUpperCase()})`;
     document.getElementById('rival-name-badge').innerText = `RIVAL: ${rivalPlayer.toUpperCase()}`;
-    document.getElementById('wait-status').innerText = `Conectado como ${localPlayer}. Esperando a ${rivalPlayer}...`;
+}
 
-    roomRef.child(`players/${localPlayer}`).set({
+document.getElementById('btn-join-room').addEventListener('click', () => {
+    const pass = document.getElementById('room-pass').value.trim() || '1234';
+    roomCode = pass.replace(/[^a-zA-Z0-9_-]/g, '');
+
+    document.getElementById('btn-join-room').classList.add('hidden');
+    document.getElementById('room-status-box').classList.remove('hidden');
+
+    currentRoomRef = db.ref(`rooms/room_${roomCode}`);
+    chatRef = currentRoomRef.child('chat');
+
+    // Escuchar mensajes en la sala
+    chatRef.limitToLast(5).on('child_added', (snap) => {
+        const msg = snap.val();
+        if (msg) displayBubble(msg.sender, msg.text);
+    });
+
+    // Registrar jugador
+    const playerRef = currentRoomRef.child(`players/${localPlayer}`);
+    playerRef.set({
         ready: true,
         score: 0,
         combo: 0,
         attackTrigger: 0
     });
+    playerRef.onDisconnect().remove();
 
-    roomRef.child(`players/${localPlayer}`).onDisconnect().remove();
+    // Escuchar estado de ambos jugadores
+    currentRoomRef.child('players').on('value', (snap) => {
+        const players = snap.val() || {};
+        const danielaReady = players.Daniela && players.Daniela.ready;
+        const samReady = players.Sam && players.Sam.ready;
 
-    roomRef.child('players').on('value', (snapshot) => {
-        const players = snapshot.val() || {};
-        if (players.Daniela && players.Daniela.ready && players.Sam && players.Sam.ready && gameState === 'LOBBY') {
-            document.getElementById('wait-status').innerText = "¡Ambos conectados! Iniciando en 3s...";
+        document.getElementById('status-daniela').innerText = `Daniela: ${danielaReady ? '¡Conectada! ✅' : 'Esperando... ⏳'}`;
+        document.getElementById('status-daniela').style.color = danielaReady ? '#00f5d4' : '#b09dc8';
+
+        document.getElementById('status-sam').innerText = `Sam: ${samReady ? '¡Conectado! ✅' : 'Esperando... ⏳'}`;
+        document.getElementById('status-sam').style.color = samReady ? '#00f5d4' : '#b09dc8';
+
+        // Solo iniciar si AMBOS están conectados y listos
+        if (danielaReady && samReady && gameState === 'LOBBY') {
             if (localPlayer === 'Daniela') {
-                const startTime = Date.now() + 3000;
-                roomRef.update({ startTime: startTime, status: 'PLAYING' });
+                // Daniela fija el timestamp sincronizado para ambos
+                const startTimestamp = Date.now() + 3500;
+                currentRoomRef.update({ startTime: startTimestamp });
             }
         }
 
+        // Datos del rival en partida
         if (players[rivalPlayer]) {
             rivalScore = players[rivalPlayer].score || 0;
             rivalCombo = players[rivalPlayer].combo || 0;
@@ -904,31 +955,33 @@ function joinRoom(name) {
         }
     });
 
-    roomRef.child('startTime').on('value', (snapshot) => {
-        const startTime = snapshot.val();
-        if (startTime && gameState === 'LOBBY') {
-            gameStartTimestamp = startTime;
-            waitAndStartMatch();
+    // Escuchar el inicio sincronizado
+    currentRoomRef.child('startTime').on('value', (snap) => {
+        const time = snap.val();
+        if (time && gameState === 'LOBBY') {
+            gameStartTimestamp = time;
+            handleCountdownAndStart();
         }
     });
-}
+});
 
-function waitAndStartMatch() {
-    const timer = setInterval(() => {
-        const now = Date.now();
-        const diff = gameStartTimestamp - now;
-        if (diff <= 0) {
-            clearInterval(timer);
-            startMatch();
+function handleCountdownAndStart() {
+    const cdText = document.getElementById('countdown-text');
+    const interval = setInterval(() => {
+        const remaining = gameStartTimestamp - Date.now();
+        if (remaining <= 0) {
+            clearInterval(interval);
+            cdText.innerText = "¡INICIANDO!";
+            launchMatch();
         } else {
-            document.getElementById('wait-status').innerText = `Comenzando en ${(diff / 1000).toFixed(1)}s...`;
+            cdText.innerText = `¡Ambos listos! Comenzando en ${(remaining / 1000).toFixed(1)}s...`;
         }
     }, 50);
 }
 
-function startMatch() {
+function launchMatch() {
     gameState = 'PLAYING';
-    document.getElementById('lobby-screen').classList.add('hidden');
+    document.getElementById('screen-room').classList.add('hidden');
     document.getElementById('gameover-screen').classList.add('hidden');
 
     playerScore = 0;
@@ -964,7 +1017,7 @@ function startMatch() {
 }
 
 /* =================================================================
-   8. ATAQUE CON CORAZONES (COMBO 15)
+   8. EFECTO DISTRACCIÓN CON CORAZONES (COMBO 15)
    ================================================================= */
 function triggerHeartDistraction() {
     const overlay = document.getElementById('heart-attack-overlay');
@@ -989,16 +1042,20 @@ function triggerHeartDistraction() {
 }
 
 function sendCombo15Attack() {
-    roomRef.child(`players/${localPlayer}`).update({
-        attackTrigger: Date.now()
-    });
+    if (currentRoomRef) {
+        currentRoomRef.child(`players/${localPlayer}`).update({
+            attackTrigger: Date.now()
+        });
+    }
 }
 
 function syncPlayerStats() {
-    roomRef.child(`players/${localPlayer}`).update({
-        score: playerScore,
-        combo: playerCombo
-    });
+    if (currentRoomRef) {
+        currentRoomRef.child(`players/${localPlayer}`).update({
+            score: playerScore,
+            combo: playerCombo
+        });
+    }
 }
 
 /* =================================================================
@@ -1093,14 +1150,14 @@ function triggerFeedback(txt, color) {
 }
 
 /* =================================================================
-   10. BUCLE DE JUEGO (Dual Render + Lyrics)
+   10. BUCLE DE JUEGO
    ================================================================= */
 function gameLoop() {
     if (gameState !== 'PLAYING') return;
 
     const now = audioEl.currentTime;
 
-    // 1. Subtítulos
+    // Subtítulos
     const lyric = LYRICS.find(l => now >= l.start && now <= l.end);
     const lyricEl = document.getElementById('lyrics-content');
     if (lyric) {
@@ -1108,7 +1165,7 @@ function gameLoop() {
         lyricEl.className = lyric.isChorus ? 'lyric-chorus' : '';
     }
 
-    // 2. Render Rival
+    // Render Rival
     rCtx.fillStyle = '#0a0515';
     rCtx.fillRect(0, 0, rW, rH);
 
@@ -1143,7 +1200,7 @@ function gameLoop() {
         }
     }
 
-    // 3. Render Jugador Local
+    // Render Jugador Local
     pCtx.fillStyle = '#06030c';
     pCtx.fillRect(0, 0, pW, pH);
 
@@ -1266,7 +1323,7 @@ function finishMatch() {
 }
 
 /* =================================================================
-   11. GESTIÓN TÁCTIL (Solo Carriles)
+   11. GESTIÓN TÁCTIL (Solo en Canvas Inferior)
    ================================================================= */
 function syncTouchLanes(e) {
     e.preventDefault();
@@ -1296,7 +1353,7 @@ pCanvas.addEventListener('touchend', syncTouchLanes, { passive: false });
 pCanvas.addEventListener('touchcancel', syncTouchLanes, { passive: false });
 
 document.getElementById('rematch-btn').addEventListener('click', () => {
-    roomRef.remove();
+    if (currentRoomRef) currentRoomRef.remove();
     location.reload();
 });
 </script>
