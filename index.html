@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Rhythm Beats</title>
+    
+    <script src="dusk_song.js"></script>
+    <script src="hey_boy_song.js"></script>
+    <script src="wake_me_up_song.js"></script>
+    <script src="dj_snake_song.js"></script>
+    <script src="ibiza_song.js"></script>
+    <script src="titanium_song.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #040207; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #fff; touch-action: none; }
+        button, input, select, .overlay, .card, #mid-bar, #chat-phase1, #chat-phase2 { touch-action: manipulation !important; pointer-events: auto !important; }
+
+        #game-container { position: relative; width: 100%; max-width: 480px; height: 100%; margin: 0 auto; background: #090412; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* Multijugador vs Solitario */
+        #rival-section { position: relative; width: 100%; height: 38%; background: #0f071d; border-bottom: 2px solid #ff416c; overflow: hidden; }
+        #rival-hud { position: absolute; top: 6px; left: 0; width: 100%; padding: 0 12px; display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; color: #b09dc8; pointer-events: none; z-index: 10; }
+        .badge-rival { background: rgba(255, 65, 108, 0.25); padding: 3px 8px; border-radius: 12px; border: 1px solid #ff416c; color: #ff416c; }
+
+        #mid-bar { position: relative; width: 100%; height: 14%; background: linear-gradient(180deg, #130924 0%, #0c0417 100%); display: flex; justify-content: space-between; align-items: center; padding: 0 14px; border-bottom: 2px solid #00f0ff; z-index: 20; }
+        #lyrics-content { font-size: 0.85rem; font-weight: 900; text-align: center; text-transform: uppercase; color: #fff; text-shadow: 0 0 10px rgba(255, 65, 108, 0.8); flex: 1; }
+        .lyric-chorus { color: #f9d423 !important; text-shadow: 0 0 14px rgba(249, 212, 35, 0.9) !important; transform: scale(1.04); }
+
+        #chat-toggle-btn { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #ff416c, #7928ca); border: 1.5px solid rgba(255, 255, 255, 0.6); color: #fff; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+        #player-section { position: relative; width: 100%; height: 48%; background: #07030e; overflow: hidden; touch-action: none; }
+
+        /* Adaptación a Modo Solitario */
+        #game-container.single-mode #rival-section { display: none !important; }
+        #game-container.single-mode #chat-toggle-btn { display: none !important; }
+        #game-container.single-mode #mid-bar { height: 12%; border-bottom: none; }
+        #game-container.single-mode #player-section { height: 88%; }
+
+        #player-hud { position: absolute; top: 8px; left: 0; width: 100%; padding: 0 14px; display: flex; justify-content: space-between; align-items: center; z-index: 10; pointer-events: none; }
+        .score-val { font-size: 1.4rem; font-weight: 900; color: #fff; text-shadow: 0 0 8px #00f0ff; }
+        .combo-val { font-size: 0.78rem; color: #00f0ff; font-weight: 800; }
+        #feedback-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; font-weight: 900; letter-spacing: 2px; pointer-events: none; z-index: 12; opacity: 0; transition: opacity 0.1s; }
+
+        /* Efectos Visuales por Combo y Titanium */
+        #combo-fx-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 25; opacity: 0; transition: opacity 0.2s; overflow: hidden; }
+        .floating-emoji { position: absolute; font-size: 2.2rem; animation: floatUp 1.6s forwards; }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(0.6); opacity: 1; } 100% { transform: translateY(-170px) scale(1.4); opacity: 0; } }
+
+        /* Rayos Láser Titanium */
+        .laser-beam { position: absolute; height: 2px; background: #00f0ff; box-shadow: 0 0 8px #00f0ff, 0 0 16px #ff007f; animation: laserSweep 0.5s ease-out forwards; pointer-events: none; z-index: 8; }
+        @keyframes laserSweep { 0% { width: 0%; opacity: 1; } 100% { width: 100%; opacity: 0; } }
+
+        /* Burbujas de Chat */
+        #chat-bubble-container { position: absolute; top: 54%; left: 50%; transform: translateX(-50%); width: 85%; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 25; gap: 4px; }
+        .chat-bubble { background: rgba(18, 9, 32, 0.95); border-radius: 18px; padding: 6px 14px; font-size: 0.85rem; font-weight: 800; border: 1px solid; animation: popIn 0.25s forwards; }
+        .bubble-daniela { border-color: #ff416c; color: #ff99b3; }
+        .bubble-sam { border-color: #00f0ff; color: #99f3ff; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.8) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+
+        #chat-phase1 { position: absolute; right: 12px; top: 52%; background: rgba(22, 11, 38, 0.96); border: 1px solid #00f0ff; border-radius: 14px; padding: 8px; z-index: 35; display: flex; gap: 6px; }
+        .quick-btn { background: #2c1547; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 8px 10px; font-size: 1rem; color: #fff; cursor: pointer; }
+        #chat-phase2 { position: absolute; left: 50%; top: 52%; transform: translateX(-50%); width: 90%; background: rgba(22, 11, 38, 0.98); border: 1.5px solid #ff416c; border-radius: 16px; padding: 10px; z-index: 36; display: flex; gap: 8px; }
+        #chat-input-field { flex: 1; background: #0f071d; border: 1px solid #4a1d72; border-radius: 10px; padding: 8px 12px; color: #fff; font-size: 0.9rem; outline: none; }
+        #chat-send-btn { background: linear-gradient(90deg, #ff416c, #f9d423); border: none; border-radius: 10px; color: #fff; padding: 0 16px; font-weight: 900; }
+
+        /* Menús */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(6, 3, 14, 0.96); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; z-index: 50; }
+        .hidden { display: none !important; }
+        h1 { font-size: 2rem; margin-bottom: 8px; text-align: center; background: linear-gradient(135deg, #ff416c, #f9d423); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
+        .card { width: 100%; max-width: 330px; background: rgba(28, 16, 48, 0.94); border-radius: 20px; padding: 22px 20px; border: 1px solid rgba(255, 65, 108, 0.35); text-align: center; }
+        .form-group { text-align: left; margin-bottom: 12px; }
+        label { display: block; font-size: 0.75rem; color: #ff416c; margin-bottom: 4px; font-weight: 800; text-transform: uppercase; }
+        select, input[type="text"] { width: 100%; padding: 12px; background: #0f071d; border: 1px solid #4a1d72; border-radius: 12px; color: #00f0ff; font-size: 0.95rem; font-weight: 700; outline: none; margin-bottom: 8px; }
+        .player-btn { width: 100%; padding: 15px; margin: 6px 0; border: none; border-radius: 30px; font-size: 1.05rem; font-weight: 900; text-transform: uppercase; cursor: pointer; }
+        .player-btn:active { transform: scale(0.96); }
+
+        .btn-solo { background: linear-gradient(90deg, #f9d423, #ff4b2b); color: #000; }
+        .btn-multi { background: linear-gradient(90deg, #7928ca, #ff007f); color: #fff; }
+        .btn-daniela { background: linear-gradient(90deg, #ff416c, #ff4b2b); color: #fff; }
+        .btn-sam { background: linear-gradient(90deg, #00d2ff, #3a7bd5); color: #fff; }
+        .btn-ready { background: linear-gradient(90deg, #00f5d4, #00bbf9); color: #000; }
+        #room-status-box { margin-top: 14px; background: rgba(12, 6, 22, 0.85); border-radius: 12px; padding: 10px; border: 1px dashed #7928ca; font-size: 0.82rem; line-height: 1.5; color: #b09dc8; }
+        .session-badge { font-size: 0.7rem; color: #00f5d4; margin-top: 4px; display: block; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="combo-fx-overlay"></div>
+    <div id="chat-bubble-container"></div>
+
+    <div id="rival-section">
+        <div id="rival-hud">
+            <span class="badge-rival" id="rival-name-badge">RIVAL: ESPERANDO</span>
+            <span id="rival-score-text">SCORE: 0</span>
+            <span id="rival-combo-text" style="color: #f9d423;">COMBO x0</span>
+        </div>
+        <canvas id="rival-canvas"></canvas>
+    </div>
+
+    <div id="mid-bar">
+        <div id="lyrics-content">♪ SELECCIONA UNA CANCIÓN ♪</div>
+        <button id="chat-toggle-btn">💬</button>
+    </div>
+
+    <div id="chat-phase1" class="hidden">
+        <button class="quick-btn" data-msg="🔥 ¡Con todo!">🔥</button>
+        <button class="quick-btn" data-msg="❤️ ¡Vamos!">❤️</button>
+        <button class="quick-btn" data-msg="😂 Jajaja">😂</button>
+        <button class="quick-btn" data-msg="👑 Te gané">👑</button>
+        <button class="quick-btn" id="btn-open-keyboard" style="background:#ff416c;">⌨️</button>
+    </div>
+
+    <div id="chat-phase2" class="hidden">
+        <input type="text" id="chat-input-field" placeholder="Escribe..." maxlength="45" autocomplete="off">
+        <button id="chat-send-btn">➤</button>
+    </div>
+
+    <div id="player-section">
+        <div id="player-hud">
+            <div>
+                <div class="score-val" id="player-score-text">0</div>
+                <div class="combo-val" id="player-combo-text">COMBO x0</div>
+            </div>
+            <span class="badge-rival" id="player-name-badge" style="border-color: #00f0ff; color: #00f0ff;">TÚ</span>
+        </div>
+        <div id="feedback-text">PERFECT</div>
+        <canvas id="player-canvas"></canvas>
+    </div>
+
+    <div id="screen-mode" class="overlay">
+        <h1>Rhythm Beats</h1>
+        <p style="color: #b09dc8; font-size: 0.85rem; margin-bottom: 16px;">Selecciona canción y modo</p>
+        <div class="card">
+            <div class="form-group">
+                <label for="solo-song-select">Canción:</label>
+                <select id="solo-song-select"></select>
+            </div>
+            <button class="player-btn btn-solo" id="btn-mode-solo">Jugar Solitario</button>
+            <button class="player-btn btn-multi" id="btn-mode-multi">Duelo 1 vs 1 (Online)</button>
+        </div>
+    </div>
+
+    <div id="screen-character" class="overlay hidden">
+        <h1>¿Quién eres?</h1>
+        <div class="card">
+            <button class="player-btn btn-daniela" id="btn-select-daniela">Soy Daniela</button>
+            <button class="player-btn btn-sam" id="btn-select-sam">Soy Sam</button>
+        </div>
+    </div>
+
+    <div id="screen-room" class="overlay hidden">
+        <h1>Sala de Duelo</h1>
+        <div class="card">
+            <div class="form-group">
+                <label for="multi-song-select">Canción:</label>
+                <select id="multi-song-select"></select>
+            </div>
+            <div class="form-group">
+                <label for="room-pass">Contraseña de Sala:</label>
+                <input type="text" id="room-pass" value="1234" placeholder="Contraseña de Sala">
+                <span class="session-badge" id="session-notice" style="display:none;">🔒 Enlace activo (Recordada por 1 hora)</span>
+            </div>
+            <button class="player-btn btn-ready" id="btn-join-room">Conectar a la Sala</button>
+            <div id="room-status-box" class="hidden">
+                <div id="status-daniela">Daniela: Esperando...</div>
+                <div id="status-sam">Sam: Esperando...</div>
+                <div id="countdown-text" style="color:#f9d423; font-weight:900; margin-top:8px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameover-screen" class="overlay hidden">
+        <h1 id="gameover-title">¡CONCIERTO FINALIZADO!</h1>
+        <div class="card">
+            <h2 id="winner-announcement" style="color: #f9d423; margin-bottom: 14px; font-size: 1.4rem;"></h2>
+            <p id="final-stats" style="color: #b09dc8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px;"></p>
+            <button class="player-btn btn-daniela" id="rematch-btn">Otra Partida (Misma Sala)</button>
+            <button class="player-btn btn-solo" id="change-song-btn" style="margin-top:6px;">Cambiar Canción</button>
+        </div>
+    </div>
+
+    <audio id="main-audio" preload="auto"></audio>
+</div>
+
+<script>
+/* =================================================================
+   RESOLUTOR UNIVERSAL DE CANCIONES
+   ================================================================= */
+function getSongData(key) {
+    if (key === 'titanium') return window.SONG_TITANIUM;
+    if (key === 'ibiza') return window.SONG_IBIZA;
+    if (key === 'dj_snake') return window.SONG_DJ_SNAKE;
+    if (key === 'wake_me_up') return window.SONG_WAKE_ME_UP;
+    if (key === 'hey_boy') return window.SONG_HEY_BOY;
+    return window.SONG_DUSK || window.CURRENT_SONG || null;
+}
+
+const AVAILABLE_SONGS = [
+    { key: "dusk", name: "Dusk Till Dawn - Zayn & Sia" },
+    { key: "hey_boy", name: "Hey Boy - Sia ft. Burna Boy" },
+    { key: "wake_me_up", name: "Wake Me Up - Avicii (4:07)" },
+    { key: "dj_snake", name: "Let Me Love You - DJ Snake (Hard ⚡)" },
+    { key: "ibiza", name: "I Took A Pill In Ibiza (EXTREME 💀)" },
+    { key: "titanium", name: "Titanium - David Guetta ft. Sia (ULTRA SPEED ⚡💀)" }
+];
+
+function populateSongSelectors() {
+    const soloSelect = document.getElementById('solo-song-select');
+    const multiSelect = document.getElementById('multi-song-select');
+    soloSelect.innerHTML = '';
+    multiSelect.innerHTML = '';
+
+    AVAILABLE_SONGS.forEach(item => {
+        const opt1 = document.createElement('option');
+        opt1.value = item.key;
+        opt1.innerText = item.name;
+        soloSelect.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = item.key;
+        opt2.innerText = item.name;
+        multiSelect.appendChild(opt2);
+    });
+}
+
+/* =================================================================
+   SISTEMA DE CONTRASEÑA CON EXPIRACIÓN DE 1 HORA (LocalStorage)
+   ================================================================= */
+const SESSION_TTL = 3600000; // 1 hora en milisegundos
+
+function saveRoomPassword(pass) {
+    try {
+        localStorage.setItem('rhythm_room_pass', pass);
+        localStorage.setItem('rhythm_room_expiry', Date.now() + SESSION_TTL);
+    } catch(e) {}
+}
+
+function checkSavedPassword() {
+    try {
+        const pass = localStorage.getItem('rhythm_room_pass');
+        const expiry = parseInt(localStorage.getItem('rhythm_room_expiry') || '0', 10);
+        if (pass && Date.now() < expiry) {
+            document.getElementById('room-pass').value = pass;
+            document.getElementById('session-notice').style.display = 'block';
+            return pass;
+        } else {
+            localStorage.removeItem('rhythm_room_pass');
+            localStorage.removeItem('rhythm_room_expiry');
+            document.getElementById('session-notice').style.display = 'none';
+        }
+    } catch(e) {}
+    return null;
+}
+
+/* =================================================================
+   FIREBASE
+   ================================================================= */
+const firebaseConfig = {
+    apiKey: "AIzaSyBHAs-NkodvSDvfbXDZUqSharhO7nkVZ10",
+    authDomain: "fir-191c0.firebaseapp.com",
+    databaseURL: "https://fir-191c0-default-rtdb.firebaseio.com",
+    projectId: "fir-191c0",
+    storageBucket: "fir-191c0.firebasestorage.app",
+    messagingSenderId: "292304513145",
+    appId: "1:292304513145:web:565c9c9baaa146095acca8"
+};
+
+let db = null;
+try {
+    if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+    }
+} catch (e) {}
+
+let isSoloMode = false, localPlayer = "", rivalPlayer = "", roomCode = "", currentRoomRef = null, chatRef = null;
+let activeSongKey = "dusk";
+
+const SFX = {
+    ctx: null,
+    init() {
+        try {
+            if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+        } catch (e) {}
+    },
+    hit() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator(), g = this.ctx.createGain(), now = this.ctx.currentTime;
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(320, now); osc.frequency.exponentialRampToValueAtTime(70, now + 0.05);
+        g.gain.setValueAtTime(0.4, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        osc.connect(g); g.connect(this.ctx.destination); osc.start(now); osc.stop(now + 0.07);
+    },
+    miss() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator(), g = this.ctx.createGain(), now = this.ctx.currentTime;
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(110, now); osc.frequency.linearRampToValueAtTime(50, now + 0.12);
+        g.gain.setValueAtTime(0.2, now); g.gain.linearRampToValueAtTime(0.01, now + 0.12);
+        osc.connect(g); g.connect(this.ctx.destination); osc.start(now); osc.stop(now + 0.13);
+    }
+};
+
+/* =================================================================
+   CANVAS & SINCRONIZACIÓN DE TIEMPO
+   ================================================================= */
+const pCanvas = document.getElementById('player-canvas'), pCtx = pCanvas.getContext('2d');
+const rCanvas = document.getElementById('rival-canvas'), rCtx = rCanvas.getContext('2d');
+const audioEl = document.getElementById('main-audio');
+
+let pW, pH, rW, rH, laneWidth;
+const LANES = 4;
+
+function resizeAll() {
+    const pSec = document.getElementById('player-section');
+    const rSec = document.getElementById('rival-section');
+
+    pW = pSec.clientWidth;
+    pH = pSec.clientHeight;
+    pCanvas.width = pW; pCanvas.height = pH;
+
+    if (!isSoloMode && rSec) {
+        rW = rSec.clientWidth;
+        rH = rSec.clientHeight;
+        rCanvas.width = rW; rCanvas.height = rH;
+    }
+    laneWidth = pW / LANES;
+}
+window.addEventListener('resize', resizeAll);
+
+let gameState = 'MENU', playerScore = 0, playerCombo = 0, rivalScore = 0, rivalCombo = 0;
+let playerNotes = [], rivalNotes = [], activeTouches = new Set(), playerSpeed = 500, rivalSpeed = 380;
+let gameStartTimestamp = 0, fallbackClockStart = 0;
+
+// Variables para Efectos Alocados Titanium
+let screenShakeTimer = 0;
+
+function getCurrentSongTime() {
+    if (audioEl && !audioEl.paused && !isNaN(audioEl.currentTime)) {
+        return audioEl.currentTime;
+    }
+    if (fallbackClockStart > 0) {
+        return (performance.now() - fallbackClockStart) / 1000;
+    }
+    return 0;
+}
+
+/* =================================================================
+   EFECTOS ESPECIALES & ALOCADOS (TITANIUM EXCLUSIVO)
+   ================================================================= */
+function triggerTitaniumLaser() {
+    const laser = document.createElement('div');
+    laser.className = 'laser-beam';
+    laser.style.top = Math.random() * 80 + 10 + '%';
+    document.getElementById('player-section').appendChild(laser);
+    setTimeout(() => laser.remove(), 500);
+}
+
+function triggerComboEffect(type) {
+    const overlay = document.getElementById('combo-fx-overlay');
+    overlay.style.opacity = '1';
+    overlay.innerHTML = '';
+
+    let emojis = ['✨'];
+    let bg = 'radial-gradient(circle, rgba(255, 215, 0, 0.35) 0%, transparent 80%)';
+
+    if (type === 'lightning') {
+        emojis = ['⚡', '⭐', '✨', '⚡'];
+        bg = 'radial-gradient(circle, rgba(0, 240, 255, 0.4) 0%, transparent 80%)';
+    } else if (type === 'hearts') {
+        emojis = ['💖', '💕', '💗', '💓', '💘'];
+        bg = 'radial-gradient(circle, rgba(255, 20, 147, 0.4) 0%, transparent 80%)';
+    } else if (type === 'fire') {
+        emojis = ['🔥', '💥', '⚡', '🔥'];
+        bg = 'radial-gradient(circle, rgba(255, 69, 0, 0.45) 0%, transparent 80%)';
+    } else if (type === 'crown') {
+        emojis = ['👑', '💎', '🌟', '👑'];
+        bg = 'radial-gradient(circle, rgba(249, 212, 35, 0.5) 0%, transparent 80%)';
+    }
+
+    overlay.style.background = bg;
+
+    for (let i = 0; i < 16; i++) {
+        const s = document.createElement('span');
+        s.className = 'floating-emoji';
+        s.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+        s.style.left = (Math.random() * 85 + 5) + '%';
+        s.style.top = (Math.random() * 70 + 20) + '%';
+        s.style.animationDelay = (Math.random() * 0.4) + 's';
+        overlay.appendChild(s);
+    }
+
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => { overlay.innerHTML = ''; }, 300);
+    }, 1400);
+}
+
+function checkComboMilestone(combo) {
+    let effectType = null;
+    if (combo === 10) effectType = 'lightning';
+    else if (combo === 15) effectType = 'hearts';
+    else if (combo === 20) effectType = 'fire';
+    else if (combo === 30 || (combo > 30 && combo % 15 === 0)) effectType = 'crown';
+
+    if (effectType) {
+        if (isSoloMode) {
+            triggerComboEffect(effectType);
+        } else if (currentRoomRef) {
+            currentRoomRef.child(`players/${localPlayer}`).update({
+                attackType: effectType,
+                attackTrigger: Date.now()
+            });
+        }
+    }
+}
+
+/* =================================================================
+   ACCIONES Y NAVEGACIÓN
+   ================================================================= */
+function bind(id, fn) { document.getElementById(id)?.addEventListener('click', (e) => { e.preventDefault(); fn(); }); }
+
+bind('btn-mode-solo', () => {
+    isSoloMode = true;
+    activeSongKey = document.getElementById('solo-song-select').value;
+    SFX.init();
+    document.getElementById('game-container').classList.add('single-mode');
+    document.getElementById('screen-mode').classList.add('hidden');
+    document.getElementById('player-name-badge').innerText = 'SOLITARIO';
+    resizeAll();
+    launchMatch();
+});
+
+bind('btn-mode-multi', () => {
+    isSoloMode = false;
+    SFX.init();
+    document.getElementById('game-container').classList.remove('single-mode');
+    document.getElementById('screen-mode').classList.add('hidden');
+    document.getElementById('screen-character').classList.remove('hidden');
+    checkSavedPassword();
+    resizeAll();
+});
+
+bind('btn-select-daniela', () => pickPlayer('Daniela'));
+bind('btn-select-sam', () => pickPlayer('Sam'));
+
+function pickPlayer(name) {
+    localPlayer = name; rivalPlayer = (name === 'Daniela') ? 'Sam' : 'Daniela';
+    document.getElementById('screen-character').classList.add('hidden');
+    document.getElementById('screen-room').classList.remove('hidden');
+    document.getElementById('player-name-badge').innerText = `TÚ (${localPlayer.toUpperCase()})`;
+    document.getElementById('rival-name-badge').innerText = `RIVAL: ${rivalPlayer.toUpperCase()}`;
+    checkSavedPassword();
+}
+
+bind('btn-join-room', () => {
+    if (!db) { alert("Firebase aún conectando..."); return; }
+    activeSongKey = document.getElementById('multi-song-select').value;
+    const pass = document.getElementById('room-pass').value.trim() || '1234';
+    saveRoomPassword(pass); // Guarda la contraseña por 1 hora
+
+    roomCode = pass.replace(/[^a-zA-Z0-9_-]/g, '');
+
+    document.getElementById('btn-join-room').classList.add('hidden');
+    document.getElementById('room-status-box').classList.remove('hidden');
+
+    currentRoomRef = db.ref(`rooms/room_${roomCode}`);
+    chatRef = currentRoomRef.child('chat');
+    chatRef.limitToLast(5).on('child_added', (snap) => { const msg = snap.val(); if (msg) displayBubble(msg.sender, msg.text); });
+
+    const pRef = currentRoomRef.child(`players/${localPlayer}`);
+    pRef.set({ ready: true, score: 0, combo: 0, attackTrigger: 0, attackType: 'lightning' });
+    pRef.onDisconnect().remove();
+
+    if (localPlayer === 'Daniela') {
+        currentRoomRef.update({ songKey: activeSongKey });
+    } else {
+        currentRoomRef.child('songKey').on('value', (snap) => {
+            if (snap.val()) activeSongKey = snap.val();
+        });
+    }
+
+    currentRoomRef.child('players').on('value', (snap) => {
+        const p = snap.val() || {};
+        const dR = p.Daniela && p.Daniela.ready, sR = p.Sam && p.Sam.ready;
+
+        document.getElementById('status-daniela').innerText = `Daniela: ${dR ? '¡Lista! ✅' : 'Esperando...'}`;
+        document.getElementById('status-daniela').style.color = dR ? '#00f5d4' : '#b09dc8';
+        document.getElementById('status-sam').innerText = `Sam: ${sR ? '¡Listo! ✅' : 'Esperando...'}`;
+        document.getElementById('status-sam').style.color = sR ? '#00f5d4' : '#b09dc8';
+
+        if (dR && sR && gameState === 'MENU' && localPlayer === 'Daniela') {
+            currentRoomRef.update({ startTime: Date.now() + 3500 });
+        }
+
+        if (p[rivalPlayer]) {
+            rivalScore = p[rivalPlayer].score || 0; rivalCombo = p[rivalPlayer].combo || 0;
+            document.getElementById('rival-score-text').innerText = `SCORE: ${rivalScore}`;
+            document.getElementById('rival-combo-text').innerText = `COMBO x${rivalCombo}`;
+            
+            if ((p[rivalPlayer].attackTrigger || 0) > (window.lastAttack || 0)) {
+                window.lastAttack = p[rivalPlayer].attackTrigger;
+                triggerComboEffect(p[rivalPlayer].attackType || 'hearts');
+            }
+        }
+    });
+
+    currentRoomRef.child('startTime').on('value', (snap) => {
+        const time = snap.val();
+        if (time && gameState === 'MENU') {
+            gameStartTimestamp = time;
+            const cd = document.getElementById('countdown-text');
+            const timer = setInterval(() => {
+                const rem = gameStartTimestamp - Date.now();
+                if (rem <= 0) { clearInterval(timer); cd.innerText = "¡INICIANDO!"; launchMatch(); }
+                else { cd.innerText = `Iniciando en ${(rem / 1000).toFixed(1)}s...`; }
+            }, 50);
+        }
+    });
+});
+
+/* =================================================================
+   INICIO DE PARTIDA & AJUSTE DE VELOCIDAD
+   ================================================================= */
+function launchMatch() {
+    const songData = getSongData(activeSongKey);
+
+    if (!songData || !songData.chart || songData.chart.length === 0) {
+        alert("Atención: No se encontraron las notas de la canción.");
+        return;
+    }
+
+    gameState = 'PLAYING';
+    document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
+
+    playerScore = 0; playerCombo = 0;
+
+    // Multiplicador extremo si la canción lo solicita (Titanium)
+    const mult = songData.speedMultiplier || 1.0;
+    playerSpeed = (pH * 0.75) * mult;
+    rivalSpeed = (rH * 0.75) * mult;
+
+    playerNotes = songData.chart.map((n, i) => {
+        const tTime = (n.targetTime !== undefined) ? n.targetTime : n.time;
+        const dSec = (n.durationSec !== undefined) ? n.durationSec : (n.dur || 0.2);
+        return {
+            id: i,
+            lane: n.lane,
+            targetTime: tTime,
+            durationSec: dSec,
+            isHold: dSec > 0.4,
+            holding: false,
+            holdProgress: 0,
+            hit: false,
+            missed: false
+        };
+    });
+
+    if (!isSoloMode) {
+        rivalNotes = songData.chart.map((n, i) => {
+            const tTime = (n.targetTime !== undefined) ? n.targetTime : n.time;
+            const dSec = (n.durationSec !== undefined) ? n.durationSec : (n.dur || 0.2);
+            return {
+                id: i,
+                lane: n.lane,
+                targetTime: tTime,
+                durationSec: dSec,
+                isHold: dSec > 0.4,
+                hit: false
+            };
+        });
+    }
+
+    fallbackClockStart = performance.now();
+    if (audioEl) {
+        audioEl.pause();
+        audioEl.src = songData.audioSrc;
+        audioEl.load();
+        audioEl.play().catch(() => {});
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+/* =================================================================
+   CHAT EN 2 FASES
+   ================================================================= */
+const chatPhase1 = document.getElementById('chat-phase1'), chatPhase2 = document.getElementById('chat-phase2');
+const chatInputField = document.getElementById('chat-input-field');
+let lastChatTap = 0;
+
+document.getElementById('chat-toggle-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const now = Date.now();
+    if (now - lastChatTap < 300) {
+        chatPhase1.classList.add('hidden'); chatPhase2.classList.toggle('hidden');
+        if (!chatPhase2.classList.contains('hidden')) chatInputField.focus();
+    } else {
+        chatPhase2.classList.add('hidden'); chatPhase1.classList.toggle('hidden');
+    }
+    lastChatTap = now;
+});
+
+bind('btn-open-keyboard', () => { chatPhase1.classList.add('hidden'); chatPhase2.classList.remove('hidden'); chatInputField.focus(); });
+
+function sendChat(text) {
+    if (!chatRef || !text || !text.trim()) return;
+    chatRef.push({ sender: localPlayer, text: text.trim(), timestamp: firebase.database.ServerValue.TIMESTAMP });
+    chatPhase1.classList.add('hidden'); chatPhase2.classList.add('hidden');
+}
+
+document.querySelectorAll('.quick-btn[data-msg]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); sendChat(b.dataset.msg); }));
+bind('chat-send-btn', () => { if (chatInputField.value) { sendChat(chatInputField.value); chatInputField.value = ''; } });
+document.addEventListener('click', (e) => { if (!e.target.closest('#chat-phase1') && !e.target.closest('#chat-phase2') && !e.target.closest('#chat-toggle-btn')) { chatPhase1.classList.add('hidden'); chatPhase2.classList.add('hidden'); } });
+
+function displayBubble(sender, text) {
+    const b = document.createElement('div');
+    b.className = `chat-bubble ${sender === 'Daniela' ? 'bubble-daniela' : 'bubble-sam'}`;
+    b.innerHTML = `<span style="font-size:0.75rem; opacity:0.8;">[${sender}]</span> <span>${text}</span>`;
+    document.getElementById('chat-bubble-container').appendChild(b);
+    setTimeout(() => { b.style.opacity = '0'; setTimeout(() => b.remove(), 300); }, 2800);
+}
+
+/* =================================================================
+   JUGABILIDAD & DETECCIÓN
+   ================================================================= */
+function syncPlayerStats() {
+    if (currentRoomRef && !isSoloMode) currentRoomRef.child(`players/${localPlayer}`).update({ score: playerScore, combo: playerCombo });
+}
+
+function onLaneDown(lane) {
+    if (gameState !== 'PLAYING') return;
+    const now = getCurrentSongTime();
+    let target = null, minDelta = Infinity;
+
+    for (let i = 0; i < playerNotes.length; i++) {
+        let n = playerNotes[i];
+        if (n.lane === lane && !n.hit && !n.missed) {
+            let delta = Math.abs(n.targetTime - now);
+            if (delta < minDelta) { minDelta = delta; target = n; }
+        }
+    }
+
+    if (target && minDelta < 0.18) {
+        if (!target.isHold) {
+            target.hit = true; SFX.hit(); playerScore += 100; playerCombo++;
+            checkComboMilestone(playerCombo);
+            feedback('PERFECT!', '#00f0ff');
+
+            // Efecto alocado exclusivo de Titanium
+            const songData = getSongData(activeSongKey);
+            if (songData && songData.crazyFx) {
+                screenShakeTimer = 6;
+                if (Math.random() < 0.4) triggerTitaniumLaser();
+            }
+        } else {
+            target.holding = true; SFX.hit(); feedback('HOLD!', '#ff416c');
+        }
+    } else {
+        SFX.miss(); playerCombo = 0; playerScore = Math.max(0, playerScore - 25); feedback('MISS', '#ff2a55');
+    }
+    updateHUD(); syncPlayerStats();
+}
+
+function onLaneUp(lane) {
+    for (let i = 0; i < playerNotes.length; i++) {
+        let n = playerNotes[i];
+        if (n.lane === lane && n.holding && !n.hit) {
+            n.holding = false;
+            if (n.holdProgress < 0.7) { n.missed = true; playerCombo = 0; feedback('SOLTADO!', '#ff2a55'); SFX.miss(); }
+            else {
+                n.hit = true; playerScore += 160; playerCombo++;
+                checkComboMilestone(playerCombo);
+                feedback('GREAT!', '#f9d423');
+            }
+            updateHUD(); syncPlayerStats(); break;
+        }
+    }
+}
+
+function updateHUD() {
+    document.getElementById('player-score-text').innerText = playerScore;
+    document.getElementById('player-combo-text').innerText = `COMBO x${playerCombo}`;
+}
+
+function feedback(txt, color) {
+    const el = document.getElementById('feedback-text'); el.innerText = txt; el.style.color = color; el.style.opacity = '1';
+    setTimeout(() => el.style.opacity = '0', 200);
+}
+
+/* =================================================================
+   BUCLE GRÁFICO (Canvas Render)
+   ================================================================= */
+function gameLoop() {
+    if (gameState !== 'PLAYING') return;
+    const now = getCurrentSongTime();
+
+    const songData = getSongData(activeSongKey);
+    if (songData && songData.lyrics) {
+        const l = songData.lyrics.find(item => now >= item.start && now <= item.end);
+        const el = document.getElementById('lyrics-content');
+        if (el) { el.innerText = l ? l.text : ''; el.className = (l && l.isChorus) ? 'lyric-chorus' : ''; }
+    }
+
+    // Efecto de temblor en pantalla si Titanium está activo
+    let offsetX = 0, offsetY = 0;
+    if (screenShakeTimer > 0) {
+        offsetX = (Math.random() - 0.5) * 8;
+        offsetY = (Math.random() - 0.5) * 8;
+        screenShakeTimer--;
+    }
+
+    if (!isSoloMode) {
+        rCtx.fillStyle = '#0a0515'; rCtx.fillRect(0, 0, rW, rH);
+        const rTargetY = rH * 0.82;
+        rCtx.strokeStyle = '#ff416c'; rCtx.lineWidth = 1.5;
+        rCtx.beginPath(); rCtx.moveTo(0, rTargetY); rCtx.lineTo(rW, rTargetY); rCtx.stroke();
+
+        for (let i = 0; i < rivalNotes.length; i++) {
+            let n = rivalNotes[i];
+            const y = rTargetY - ((n.targetTime - now) * rivalSpeed) - 10;
+            if (y > -20 && y < rH + 20) {
+                rCtx.fillStyle = '#ff416c'; rCtx.beginPath();
+                rCtx.roundRect(n.lane * (rW / LANES) + 3, y, (rW / LANES) - 6, 10, 4); rCtx.fill();
+            }
+        }
+    }
+
+    pCtx.save();
+    pCtx.translate(offsetX, offsetY);
+
+    // Fondo del jugador (Pulsante en drops si crazyFx está activo)
+    if (songData && songData.crazyFx && (playerCombo > 15)) {
+        pCtx.fillStyle = (Math.floor(now * 8) % 2 === 0) ? '#12041e' : '#070210';
+    } else {
+        pCtx.fillStyle = '#06030c';
+    }
+    pCtx.fillRect(0, 0, pW, pH);
+
+    const pTargetY = pH * 0.82;
+    pCtx.strokeStyle = (songData && songData.crazyFx) ? '#00f0ff' : '#00f0ff';
+    pCtx.lineWidth = 2.5;
+    pCtx.beginPath(); pCtx.moveTo(0, pTargetY); pCtx.lineTo(pW, pTargetY); pCtx.stroke();
+
+    activeTouches.forEach(lane => { pCtx.fillStyle = 'rgba(0, 240, 255, 0.22)'; pCtx.fillRect(lane * laneWidth, 0, laneWidth, pH); });
+
+    const tileH = pH * 0.11;
+    for (let i = 0; i < playerNotes.length; i++) {
+        let n = playerNotes[i];
+        if (n.holding && !n.hit) {
+            n.holdProgress = Math.min(1.0, (now - n.targetTime) / n.durationSec);
+            playerScore += 1; document.getElementById('player-score-text').innerText = playerScore;
+            if (n.holdProgress >= 1.0) {
+                n.holding = false; n.hit = true; playerScore += 160; playerCombo++;
+                checkComboMilestone(playerCombo);
+                feedback('PERFECT HOLD!', '#f9d423'); updateHUD(); syncPlayerStats();
+            }
+        }
+
+        if (!n.hit) {
+            const timeDiff = n.targetTime - now;
+            const y = pTargetY - (timeDiff * playerSpeed) - tileH;
+
+            if (timeDiff < -0.18 && !n.missed && !n.holding) {
+                n.missed = true; playerCombo = 0; feedback('MISS', '#ff2a55'); SFX.miss(); updateHUD(); syncPlayerStats();
+            }
+
+            const x = n.lane * laneWidth + 5, w = laneWidth - 10;
+            if (!n.isHold) {
+                if (y + tileH > 0 && y < pH) {
+                    const g = pCtx.createLinearGradient(x, y, x, y + tileH);
+                    if (songData && songData.crazyFx) {
+                        g.addColorStop(0, '#00f0ff'); g.addColorStop(1, '#ff007f');
+                    } else {
+                        g.addColorStop(0, '#00f0ff'); g.addColorStop(1, '#3a7bd5');
+                    }
+                    pCtx.fillStyle = g; pCtx.beginPath(); pCtx.roundRect(x, y, w, tileH, 8); pCtx.fill();
+                }
+            } else {
+                const tailTopY = y - (n.durationSec * playerSpeed);
+                if (y + tileH > 0 && tailTopY < pH) {
+                    pCtx.fillStyle = 'rgba(249, 212, 35, 0.35)'; pCtx.fillRect(x + w * 0.25, Math.max(tailTopY, 0), w * 0.5, y - Math.max(tailTopY, 0) + tileH / 2);
+                    const g = pCtx.createLinearGradient(x, y, x, y + tileH); g.addColorStop(0, '#f9d423'); g.addColorStop(1, '#ff416c');
+                    pCtx.fillStyle = g; pCtx.beginPath(); pCtx.roundRect(x, y, w, tileH, 8); pCtx.fill();
+                }
+            }
+        }
+    }
+
+    pCtx.restore();
+
+    if (now >= 246 || (audioEl && audioEl.duration && now >= audioEl.duration - 1)) {
+        finishMatch(); return;
+    }
+    requestAnimationFrame(gameLoop);
+}
+
+function finishMatch() {
+    gameState = 'GAMEOVER';
+    if (audioEl) audioEl.pause();
+    document.getElementById('gameover-screen').classList.remove('hidden');
+
+    const winEl = document.getElementById('winner-announcement');
+    const stEl = document.getElementById('final-stats');
+
+    if (isSoloMode) {
+        winEl.innerText = "¡PARTIDA COMPLETADA!";
+        stEl.innerHTML = `<b>Puntuación:</b> ${playerScore} Pts`;
+    } else {
+        winEl.innerText = (playerScore === rivalScore) ? "¡EMPATE!" : (playerScore > rivalScore ? `👑 ¡GANASTE, ${localPlayer.toUpperCase()}!` : `👑 ¡GANÓ ${rivalPlayer.toUpperCase()}!`);
+        stEl.innerHTML = `<b>Tus Puntos:</b> ${playerScore}<br><b>${rivalPlayer}:</b> ${rivalScore}`;
+    }
+}
+
+/* =================================================================
+   PARTIDAS CONSECUTIVAS SIN RE-ESCRIBIR CONTRASEÑA
+   ================================================================= */
+bind('rematch-btn', () => {
+    // Si estamos en multijugador, reinicia la partida en la misma sala sin pedir contraseña
+    if (!isSoloMode && currentRoomRef) {
+        document.getElementById('gameover-screen').classList.add('hidden');
+        document.getElementById('screen-room').classList.remove('hidden');
+        document.getElementById('btn-join-room').classList.remove('hidden');
+        document.getElementById('room-status-box').classList.add('hidden');
+        gameState = 'MENU';
+        // Auto-reconexión instantánea con la contraseña guardada
+        document.getElementById('btn-join-room').click();
+    } else {
+        launchMatch();
+    }
+});
+
+bind('change-song-btn', () => {
+    document.getElementById('gameover-screen').classList.add('hidden');
+    document.getElementById('screen-mode').classList.remove('hidden');
+    gameState = 'MENU';
+});
+
+/* =================================================================
+   GESTIÓN TÁCTIL
+   ================================================================= */
+function syncLanes(e) {
+    e.preventDefault();
+    const rect = pCanvas.getBoundingClientRect();
+    const lanes = new Set();
+    for (let i = 0; i < e.touches.length; i++) {
+        let lane = Math.floor((e.touches[i].clientX - rect.left) / laneWidth);
+        if (lane >= 0 && lane < LANES) lanes.add(lane);
+    }
+    lanes.forEach(l => { if (!activeTouches.has(l)) onLaneDown(l); });
+    activeTouches.forEach(l => { if (!lanes.has(l)) onLaneUp(l); });
+    activeTouches = lanes;
+}
+
+pCanvas.addEventListener('touchstart', syncLanes, { passive: false });
+pCanvas.addEventListener('touchmove', syncLanes, { passive: false });
+pCanvas.addEventListener('touchend', syncLanes, { passive: false });
+pCanvas.addEventListener('touchcancel', syncLanes, { passive: false });
+
+window.addEventListener('DOMContentLoaded', () => {
+    populateSongSelectors();
+    checkSavedPassword();
+    resizeAll();
+});
+</script>
+</body>
+</html>
